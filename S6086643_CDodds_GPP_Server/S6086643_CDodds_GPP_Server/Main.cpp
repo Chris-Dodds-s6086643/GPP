@@ -1,5 +1,6 @@
 #include <iostream>
 #include <WS2tcpip.h>
+#include <string>
 
 #pragma comment (lib, "ws2_32.lib")
 
@@ -68,7 +69,7 @@ int main()
 	while (true)
 	{
 		ZeroMemory(buffer, 4096);
-		std::cout << "listening\n";
+		/*std::cout << "listening\n";*/
 		int bytesReceived = recv(clientSocket, buffer, 4096, 0);
 		if (bytesReceived == SOCKET_ERROR)
 		{
@@ -80,6 +81,7 @@ int main()
 			std::cout << "quitting";
 			break;
 		}
+		std::cout << std::string(buffer, 0, bytesReceived + 1) << "\n";
 
 		send(clientSocket, buffer, bytesReceived + 1, 0);
 
