@@ -81,9 +81,10 @@ int main()
 			std::cout << "quitting";
 			break;
 		}
-		std::cout << std::string(buffer, 0, bytesReceived + 1) << "\n";
+		bytesReceived += 1;
+		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
 
-		send(clientSocket, buffer, bytesReceived + 1, 0);
+		send(clientSocket, buffer, bytesReceived, 0);
 
 
 	}
