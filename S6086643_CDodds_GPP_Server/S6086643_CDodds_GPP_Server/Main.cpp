@@ -1,11 +1,20 @@
 #include <iostream>
 #include <WS2tcpip.h>
 #include <string>
+#include "Server.h"
 
 #pragma comment (lib, "ws2_32.lib")
 
 
 int main()
+{
+	Server* s = new Server();
+	s->InitialiseServer();
+	return 0;
+
+}
+
+int mai()
 {
 	//initialise winsock
 	WSADATA winSockData;
@@ -26,7 +35,7 @@ int main()
 		std::cerr << "Can't Create a Socket";
 		return 0;
 	}
-	
+
 	// bind socket
 	sockaddr_in hint;
 	hint.sin_family = AF_INET;
@@ -62,7 +71,7 @@ int main()
 		std::cout << host << " Connected on port " << ntohs(client.sin_port) << "\n";
 	}
 
-	closesocket(listener);
+	//closesocket(listener);
 
 	char buffer[4096];
 
@@ -92,7 +101,4 @@ int main()
 	closesocket(clientSocket);
 
 	WSACleanup();
-
-	return 0;
-
 }
