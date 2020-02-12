@@ -22,35 +22,41 @@ bool Server::InitialiseServer()
 		std::cerr << "Can't Create a Socket";
 		return false;
 	}
+	std::cout << "sizeof(*hint) " << sizeof(*hint) << "\n";
 
-	bind(*listener, (sockaddr*)& hint, sizeof(hint));
+	int result = bind(*listener, (sockaddr*) hint, sizeof(*hint));
+	if (result == SOCKET_ERROR)
+	{
+		std::cout << "socket error in binding: \n" << WSAGetLastError() << "\n";
+		return 0;
+	}
 	this->ListenForConnections();
 }
 
 void Server::ListenForConnections()
 {
 	listen(*listener, SOMAXCONN);
+	clientSize = new int(sizeof(*client));
 	
-	
-	do 
+	clientSocket = new SOCKET(accept(*listener, (sockaddr*) client, clientSize));
+	if (*clientSocket == INVALID_SOCKET)
 	{
-		clientSocket = new SOCKET(accept(*listener, (sockaddr*)& client, clientSize));
+		std::cout << "LAST ERROR \n" << WSAGetLastError() << "\n";
+		return;
+	}
 
-	} while (*clientSocket == INVALID_SOCKET);
 	if(*clientSocket != INVALID_SOCKET)
 	{
-		clientSize = new int(sizeof(client));
-
 		ZeroMemory(host, NI_MAXHOST);
 		ZeroMemory(service, NI_MAXSERV);
 
-		if (getnameinfo((sockaddr*)& client, sizeof(client), *host, NI_MAXHOST, *service, NI_MAXSERV, 0) == 0)
+		if (getnameinfo((sockaddr*) client, sizeof(client), host, NI_MAXHOST, service, NI_MAXSERV, 0) == 0)
 		{
 			std::cout << "Connected On Port " << service << std::endl;
 		}
 		else
 		{
-			inet_ntop(AF_INET, &client->sin_addr, *host, NI_MAXHOST);
+			inet_ntop(AF_INET, &client->sin_addr, host, NI_MAXHOST);
 			std::cout << host << " Connected on port " << ntohs(client->sin_port) << "\n";
 		}
 		Listen();
@@ -62,12 +68,12 @@ void Server::Listen()
 {
 	while (true)
 	{
-		ZeroMemory(buffer, 4096);
+		ZeroMemory(&buffer, 4096);
 		/*std::cout << "listening\n";*/
-		int bytesReceived = recv(*clientSocket, *buffer, 4096, 0);
+		int bytesReceived = recv(*clientSocket, buffer, 4096, 0);
 		if (bytesReceived == SOCKET_ERROR)
 		{
-			std::cerr << "ERRROR IN RECV";
+			std::cerr << "ERRROR IN RECV \n" << WSAGetLastError() << "\n";
 			break;
 		}
 		if (bytesReceived == 0)
@@ -76,9 +82,9 @@ void Server::Listen()
 			break;
 		}
 		bytesReceived += 1;
-		//std::cout << std::string(buffer, 0, (int*)&bytesReceived) << "\n";
+		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
 
-		send(*clientSocket, *buffer, bytesReceived, 0);
+		send(*clientSocket, buffer, bytesReceived, 0);
 
 
 	}

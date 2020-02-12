@@ -20,10 +20,10 @@ private:
 
 	SOCKET* clientSocket;
 
-	char* host[NI_MAXHOST];
-	char* service[NI_MAXHOST];
+	char host[NI_MAXHOST];
+	char service[NI_MAXHOST];
 
-	char* buffer[4096];
+	char buffer[4096];
 
 	fd_set* master;
 
