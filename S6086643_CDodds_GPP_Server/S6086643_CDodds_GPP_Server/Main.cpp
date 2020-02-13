@@ -3,7 +3,7 @@
 #include <string>
 #include "Server.h"
 
-#pragma comment (lib, "ws2_32.lib")
+
 
 
 int main()

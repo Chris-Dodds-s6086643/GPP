@@ -5,6 +5,9 @@ Server::Server()
 	hint->sin_family = AF_INET;
 	hint->sin_port = htons(54000);
 	hint->sin_addr.S_un.S_addr = INADDR_ANY;
+
+	threads = new std::vector<std::thread*>();
+	sockets = new std::vector<SOCKET*>();
 }
 
 bool Server::InitialiseServer()
@@ -17,12 +20,14 @@ bool Server::InitialiseServer()
 		return false;
 	}
 	listener = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
-	if (*listener == INVALID_SOCKET)
+	sockets->push_back(listener);
+	if (*sockets->at(0) == INVALID_SOCKET)
 	{
 		std::cerr << "Can't Create a Socket";
 		return false;
 	}
 	std::cout << "sizeof(*hint) " << sizeof(*hint) << "\n";
+
 
 	int result = bind(*listener, (sockaddr*) hint, sizeof(*hint));
 	if (result == SOCKET_ERROR)
@@ -37,7 +42,7 @@ void Server::ListenForConnections()
 {
 	listen(*listener, SOMAXCONN);
 	clientSize = new int(sizeof(*client));
-	
+	int numSockets = 0;
 	clientSocket = new SOCKET(accept(*listener, (sockaddr*) client, clientSize));
 	if (*clientSocket == INVALID_SOCKET)
 	{
@@ -59,9 +64,9 @@ void Server::ListenForConnections()
 			inet_ntop(AF_INET, &client->sin_addr, host, NI_MAXHOST);
 			std::cout << host << " Connected on port " << ntohs(client->sin_port) << "\n";
 		}
-		Listen();
+		numSockets++;
 	}
-	
+	Listen();
 }
 
 void Server::Listen()

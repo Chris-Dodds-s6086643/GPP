@@ -2,6 +2,8 @@
 #include <iostream>
 #include <WS2tcpip.h>
 #include <string>
+#include <thread>
+#include <vector>
 
 #pragma comment (lib, "ws2_32.lib")
 
@@ -26,6 +28,10 @@ private:
 	char buffer[4096];
 
 	fd_set* master;
+
+	std::vector<std::thread*>* threads;
+
+	std::vector<SOCKET*>* sockets;
 
 public:
 	Server();

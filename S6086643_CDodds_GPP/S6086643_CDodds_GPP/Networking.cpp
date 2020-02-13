@@ -51,11 +51,7 @@ void Networking::NetworkingStartUp()
 					std::cout << "SERVER> " << std::string(buffer, 0, bytesReceived) << "\n";
 				}
 			}
-
 		}
-
-
-
 	} while (userInput.size() > 0);
 
 }
