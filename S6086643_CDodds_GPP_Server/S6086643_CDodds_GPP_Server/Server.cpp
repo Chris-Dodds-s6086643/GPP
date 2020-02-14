@@ -8,6 +8,12 @@ Server::Server()
 
 	threads = new std::vector<std::thread*>();
 	sockets = new std::vector<SOCKET*>();
+
+	serverRunning = new std::atomic<bool>(true);
+	socketsConnected = new ThreadSafeQueue<SOCKET*>();
+
+	sockets = new std::vector<SOCKET*>();
+	threads = new std::vector<std::thread*>();
 }
 
 bool Server::InitialiseServer()
@@ -21,7 +27,7 @@ bool Server::InitialiseServer()
 	}
 	listener = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
 	sockets->push_back(listener);
-	if (*sockets->at(0) == INVALID_SOCKET)
+	if (*sockets->at((int)socketSecurityEnum::listeningSocket) == INVALID_SOCKET)
 	{
 		std::cerr << "Can't Create a Socket";
 		return false;
@@ -35,7 +41,11 @@ bool Server::InitialiseServer()
 		std::cout << "socket error in binding: \n" << WSAGetLastError() << "\n";
 		return 0;
 	}
-	this->ListenForConnections();
+	//std::thread threadTheFirst([this] { listenForConnections2(*this->serverRunning, *this->socketsConnected, *this->listener); });
+	std::thread threadTheFirst(&Server::listenForConnections2, this);
+	threadTheFirst.join();
+	//this->ListenForConnections();
+	GameLoop();
 }
 
 void Server::ListenForConnections()
@@ -49,8 +59,7 @@ void Server::ListenForConnections()
 		std::cout << "LAST ERROR \n" << WSAGetLastError() << "\n";
 		return;
 	}
-
-	if(*clientSocket != INVALID_SOCKET)
+	else
 	{
 		ZeroMemory(host, NI_MAXHOST);
 		ZeroMemory(service, NI_MAXSERV);
@@ -69,8 +78,47 @@ void Server::ListenForConnections()
 	Listen();
 }
 
+void Server::listenForConnections2()
+{
+	listen(*listener, SOMAXCONN);
+	char newHost[NI_MAXHOST];
+	char newService[NI_MAXSERV];
+	int numSockets = 0;
+	while (*serverRunning && numSockets < 2)
+	{
+		sockaddr_in newClient;
+		int newClientSize = sizeof(newClient);
+		//sockaddr_in* client = new sockaddr_in();
+		SOCKET newClientSocket = accept(*listener, (sockaddr*) &newClient, &newClientSize);
+		if (newClientSocket == INVALID_SOCKET)
+		{
+			std::cerr << "ERROR WITH THE Client 'accept' function\n" << WSAGetLastError() << "\n";
+		}
+		else
+		{
+			ZeroMemory(host, NI_MAXHOST);
+			ZeroMemory(service, NI_MAXSERV);
+
+			if (getnameinfo((sockaddr*)& newClient, sizeof(newClient), newHost, NI_MAXHOST, service, NI_MAXSERV, 0) == 0)
+			{
+				std::cout << "Connected On Port " << service << std::endl;
+			}
+			else
+			{
+				inet_ntop(AF_INET, &newClient.sin_addr, host, NI_MAXHOST);
+				std::cout << host << " Connected on port " << ntohs(newClient.sin_port) << "\n";
+			}
+			socketsConnected->push(new SOCKET(newClientSocket));
+			numSockets++;
+		}
+	}
+	std::cout << "TWO CONNECTIONS ACCOMPLISHED: " << socketsConnected << "\n";
+}
+
+
 void Server::Listen()
 {
+
 	while (true)
 	{
 		ZeroMemory(&buffer, 4096);
@@ -90,8 +138,6 @@ void Server::Listen()
 		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
 
 		send(*clientSocket, buffer, bytesReceived, 0);
-
-
 	}
 
 	closesocket(*clientSocket);
@@ -99,6 +145,48 @@ void Server::Listen()
 	WSACleanup();
 }
 
+void Server::OneSocketReceive(int socketNumber)
+{
+	char buffer[4096];
+	bool clientIsActive = true;
+
+	while(this->serverRunning && clientIsActive)
+	{
+		ZeroMemory(&buffer, 4096);
+
+		int bytesReceived = recv(*this->sockets->at(socketNumber), buffer, 4096, 0);
+		if (bytesReceived == SOCKET_ERROR)
+		{
+			std::cerr << "ERRROR IN RECV \n" << WSAGetLastError() << "\n";
+			break;
+		}
+		if (bytesReceived == 0)
+		{
+			std::cout << "quitting";
+			clientIsActive = false;
+			break;
+		}
+		bytesReceived++;
+
+		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
+
+		send(*this->sockets->at(socketNumber), buffer, bytesReceived, 0);
+	}
+}
+
 void Server::GameLoop()
 {
+	while(*serverRunning)
+	{
+		while (!socketsConnected->isEmpty())
+		{
+			SOCKET* newSocketChecker = new SOCKET();
+			socketsConnected->tryPop(newSocketChecker);
+			sockets->push_back(newSocketChecker);
+			int sizeOfSockets = sockets->size();
+			threads->push_back(new std::thread([this] { OneSocketReceive(sockets->size() - 1); }));
+			//std::thread threadTheFirst(&Server::listenForConnections2, this);
+		}
+
+	}
 }

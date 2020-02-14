@@ -4,8 +4,14 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "ThreadSafeQueue.h"
+#include <atomic>
 
 #pragma comment (lib, "ws2_32.lib")
+
+enum socketSecurityEnum {
+	listeningSocket = 0
+};
 
 class Server
 {
@@ -33,6 +39,12 @@ private:
 
 	std::vector<SOCKET*>* sockets;
 
+	ThreadSafeQueue<std::string> incomingsQueue;
+
+	ThreadSafeQueue<SOCKET*>* socketsConnected;
+
+	std::atomic<bool>* serverRunning;
+
 public:
 	Server();
 
@@ -40,7 +52,11 @@ public:
 
 	void ListenForConnections();
 
+	void listenForConnections2();
+
 	void Listen();
+
+	void OneSocketReceive(int socketNumber);
 
 	void GameLoop();
 };
