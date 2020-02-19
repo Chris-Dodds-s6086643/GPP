@@ -43,7 +43,7 @@ bool Server::InitialiseServer()
 	}
 	//std::thread threadTheFirst([this] { listenForConnections2(*this->serverRunning, *this->socketsConnected, *this->listener); });
 	std::thread threadTheFirst(&Server::listenForConnections2, this);
-	threadTheFirst.join();
+	//threadTheFirst.join();
 	//this->ListenForConnections();
 	GameLoop();
 }
@@ -84,7 +84,7 @@ void Server::listenForConnections2()
 	char newHost[NI_MAXHOST];
 	char newService[NI_MAXSERV];
 	int numSockets = 0;
-	while (*serverRunning && numSockets < 2)
+	while (*serverRunning)
 	{
 		sockaddr_in newClient;
 		int newClientSize = sizeof(newClient);
@@ -112,7 +112,6 @@ void Server::listenForConnections2()
 			numSockets++;
 		}
 	}
-	std::cout << "TWO CONNECTIONS ACCOMPLISHED: " << socketsConnected << "\n";
 }
 
 
@@ -136,6 +135,7 @@ void Server::Listen()
 		}
 		bytesReceived += 1;
 		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
+		
 
 		send(*clientSocket, buffer, bytesReceived, 0);
 	}
@@ -168,9 +168,9 @@ void Server::OneSocketReceive(int socketNumber)
 		}
 		bytesReceived++;
 
-		std::cout << std::string(buffer, 0, bytesReceived) << "\n";
-
-		send(*this->sockets->at(socketNumber), buffer, bytesReceived, 0);
+		//std::cout << std::string(buffer, 0, bytesReceived) << "\n";
+		incomingsQueue.push(std::string(buffer, 0, bytesReceived));
+		//send(*this->sockets->at(socketNumber), buffer, bytesReceived, 0);
 	}
 }
 
@@ -186,6 +186,16 @@ void Server::GameLoop()
 			int sizeOfSockets = sockets->size();
 			threads->push_back(new std::thread([this] { OneSocketReceive(sockets->size() - 1); }));
 			//std::thread threadTheFirst(&Server::listenForConnections2, this);
+		}
+		while (!incomingsQueue.isEmpty())
+		{
+			std::string outString;
+			incomingsQueue.tryPop(outString);
+			std::cout << outString << "\n";
+			for (SOCKET* s: *sockets)
+			{
+				send(*s, outString.c_str(), (outString.length() + 1), 0);
+			}
 		}
 
 	}
