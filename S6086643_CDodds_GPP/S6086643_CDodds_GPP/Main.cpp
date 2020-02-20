@@ -1,6 +1,7 @@
 #include <SFML\Graphics.hpp>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <WS2tcpip.h>
 #include "Networking.h"
 #include "ThreadSafeQueue.h"
@@ -18,11 +19,18 @@ int main()
 
 	while (window.isOpen())
 	{
-
+		std::string message;
+		while (tsq.tryPop(message))
+		{
+			std::cout << "SERVER>" << message << "\n";
+		}
 		if (sf::Mouse::getPosition(window).x <= window.getSize().x && sf::Mouse::getPosition().x >= 0
 			&& sf::Mouse::getPosition(window).y <= window.getSize().y && sf::Mouse::getPosition().y >= 0)
 		{
-			std::cout << "x: " << sf::Mouse::getPosition(window).x << ", y: " << sf::Mouse::getPosition(window).y << "\n";
+			std::ostringstream messageToSend;
+			messageToSend << "x: " << sf::Mouse::getPosition(window).x << ", y: " << sf::Mouse::getPosition(window).y << "\n";
+			std::string stringToSend = messageToSend.str();
+			networking.Send(stringToSend);
 		}
 		sf::Event event;
 		while (window.pollEvent(event))

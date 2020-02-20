@@ -3,6 +3,8 @@
 #include <string>
 #include <WS2tcpip.h>
 #include <iostream>
+#include <atomic>
+#include <thread>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -17,17 +19,25 @@ private:
 	WSAData winSockData;
 	WORD winSockVersion = MAKEWORD(2, 2);
 	sockaddr_in hint;
-
+	SOCKET* clientSocket;
+	std::atomic<bool>* listening;
+	std::thread* listeningThread;
+	
 
 
 public:
 
 	Networking(ThreadSafeQueue<std::string>& threadSafeQueue) : stringSafeQueue(threadSafeQueue)
 	{
+		listening = new std::atomic<bool>(true);
 		NetworkingStartUp();
 	}
 
 	void NetworkingStartUp();
+
+	bool Send(std::string &message);
+
+	void Listen();
 
 	~Networking();
 };

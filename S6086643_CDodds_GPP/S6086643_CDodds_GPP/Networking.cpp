@@ -1,7 +1,11 @@
 #include "Networking.h"
 
+
 Networking::~Networking()
 {
+	*listening = false;
+	listeningThread->join();
+	delete(listeningThread);
 }
 
 void Networking::NetworkingStartUp()
@@ -11,10 +15,10 @@ void Networking::NetworkingStartUp()
 	{
 		return;
 	}
-	SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+	clientSocket = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
 
 
-	if (clientSocket == INVALID_SOCKET)
+	if (*clientSocket == INVALID_SOCKET)
 	{
 		return;
 	}
@@ -23,35 +27,41 @@ void Networking::NetworkingStartUp()
 	hint.sin_port = htons(port);
 	inet_pton(AF_INET, serverIPAddress.c_str(), &hint.sin_addr);
 
-	int connectionResult = connect(clientSocket, (sockaddr*)& hint, sizeof(hint));
+	int connectionResult = connect(*clientSocket, (sockaddr*)& hint, sizeof(hint));
 	if (connectionResult == SOCKET_ERROR)
 	{
 		std::cerr << "SOCKET ERROR";
-		closesocket(clientSocket);
+		closesocket(*clientSocket);
 		WSACleanup();
 		return;
 	}
 
 	char buffer[4096];
 	std::string userInput;
+	listeningThread = new std::thread(&Networking::Listen, this);
+}
 
-	do {
-		std::cout << ">";
-		std::getline(std::cin, userInput);
+bool Networking::Send(std::string& message)
+{
+	int sendResult = send(*clientSocket, message.c_str(), message.length() + 1, 0);
+	if (sendResult == 0)
+	{
+		return false;
+	}
+	return true;
 
-		if (userInput.size() > 0)
+}
+
+void Networking::Listen()
+{
+	char buffer[4096];
+	while(*listening)
+	{
+		ZeroMemory(buffer, 4096);
+		int bytesReceived = recv(*clientSocket, buffer, 4096, 0);
+		if (bytesReceived > 0)
 		{
-			int sendResult = send(clientSocket, userInput.c_str(), userInput.size() + 1, 0);
-			if (sendResult != SOCKET_ERROR)
-			{
-				ZeroMemory(buffer, 4096);
-				int bytesReceived = recv(clientSocket, buffer, 4096, 0);
-				if (bytesReceived > 0)
-				{
-					std::cout << "SERVER> " << std::string(buffer, 0, bytesReceived) << "\n";
-				}
-			}
+			stringSafeQueue.push(std::string(buffer));
 		}
-	} while (userInput.size() > 0);
-
+	}
 }

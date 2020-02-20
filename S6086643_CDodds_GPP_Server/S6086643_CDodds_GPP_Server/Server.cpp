@@ -1,4 +1,5 @@
 #include "Server.h"
+#include <sstream>
 
 Server::Server()
 {
@@ -80,12 +81,12 @@ void Server::ListenForConnections()
 
 void Server::listenForConnections2()
 {
-	listen(*listener, SOMAXCONN);
 	char newHost[NI_MAXHOST];
 	char newService[NI_MAXSERV];
 	int numSockets = 0;
 	while (*serverRunning)
 	{
+		listen(*listener, SOMAXCONN);
 		sockaddr_in newClient;
 		int newClientSize = sizeof(newClient);
 		//sockaddr_in* client = new sockaddr_in();
@@ -164,12 +165,18 @@ void Server::OneSocketReceive(int socketNumber)
 		{
 			std::cout << "quitting";
 			clientIsActive = false;
-			break;
+			this->sockets->erase(this->sockets->begin() + (socketNumber - 1));
 		}
-		bytesReceived++;
+		else
+		{
+			bytesReceived++;
+			std::ostringstream outMessage;
+			outMessage << socketNumber << ": " << buffer;
+			incomingsQueue.push(std::string(outMessage.str(), 0, bytesReceived));
+		}
 
 		//std::cout << std::string(buffer, 0, bytesReceived) << "\n";
-		incomingsQueue.push(std::string(buffer, 0, bytesReceived));
+
 		//send(*this->sockets->at(socketNumber), buffer, bytesReceived, 0);
 	}
 }
@@ -183,7 +190,6 @@ void Server::GameLoop()
 			SOCKET* newSocketChecker = new SOCKET();
 			socketsConnected->tryPop(newSocketChecker);
 			sockets->push_back(newSocketChecker);
-			int sizeOfSockets = sockets->size();
 			threads->push_back(new std::thread([this] { OneSocketReceive(sockets->size() - 1); }));
 			//std::thread threadTheFirst(&Server::listenForConnections2, this);
 		}
@@ -192,9 +198,12 @@ void Server::GameLoop()
 			std::string outString;
 			incomingsQueue.tryPop(outString);
 			std::cout << outString << "\n";
-			for (SOCKET* s: *sockets)
+			for (size_t i = 1; i < sockets->size(); i++)
 			{
-				send(*s, outString.c_str(), (outString.length() + 1), 0);
+				if (std::stoi(outString.substr(0,1)) != i)
+				{
+					send(*sockets->at(i), outString.c_str(), (outString.length() + 1), 0);
+				}
 			}
 		}
 
