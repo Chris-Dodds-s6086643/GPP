@@ -19,7 +19,7 @@ private:
 	WSAData winSockData;
 	WORD winSockVersion = MAKEWORD(2, 2);
 	sockaddr_in hint;
-	SOCKET* clientSocket;
+	SOCKET* serverSocket;
 	std::atomic<bool>* listening;
 	std::thread* listeningThread;
 	

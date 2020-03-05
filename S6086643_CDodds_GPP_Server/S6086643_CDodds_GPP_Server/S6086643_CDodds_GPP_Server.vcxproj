@@ -125,11 +125,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Card.cpp" />
+    <ClCompile Include="ClientPlayer.cpp" />
+    <ClCompile Include="Deck.cpp" />
+    <ClCompile Include="GameController.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Server.cpp" />
+    <ClCompile Include="Message.cpp" />
+    <ClCompile Include="Networking.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Server.h" />
+    <ClInclude Include="Card.h" />
+    <ClInclude Include="ClientPlayer.h" />
+    <ClInclude Include="Deck.h" />
+    <ClInclude Include="GameController.h" />
+    <ClInclude Include="Message.h" />
+    <ClInclude Include="Networking.h" />
     <ClInclude Include="ThreadSafeQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

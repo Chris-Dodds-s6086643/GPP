@@ -140,10 +140,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Card.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Networking.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Card.h" />
     <ClInclude Include="Networking.h" />
     <ClInclude Include="ThreadSafeQueue.h" />
   </ItemGroup>

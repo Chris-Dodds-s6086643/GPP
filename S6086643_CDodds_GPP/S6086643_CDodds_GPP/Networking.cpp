@@ -15,10 +15,10 @@ void Networking::NetworkingStartUp()
 	{
 		return;
 	}
-	clientSocket = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
+	serverSocket = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
 
 
-	if (*clientSocket == INVALID_SOCKET)
+	if (*serverSocket == INVALID_SOCKET)
 	{
 		return;
 	}
@@ -27,11 +27,11 @@ void Networking::NetworkingStartUp()
 	hint.sin_port = htons(port);
 	inet_pton(AF_INET, serverIPAddress.c_str(), &hint.sin_addr);
 
-	int connectionResult = connect(*clientSocket, (sockaddr*)& hint, sizeof(hint));
+	int connectionResult = connect(*serverSocket, (sockaddr*)& hint, sizeof(hint));
 	if (connectionResult == SOCKET_ERROR)
 	{
 		std::cerr << "SOCKET ERROR";
-		closesocket(*clientSocket);
+		closesocket(*serverSocket);
 		WSACleanup();
 		return;
 	}
@@ -43,7 +43,7 @@ void Networking::NetworkingStartUp()
 
 bool Networking::Send(std::string& message)
 {
-	int sendResult = send(*clientSocket, message.c_str(), message.length() + 1, 0);
+	int sendResult = send(*serverSocket, message.c_str(), message.length() + 1, 0);
 	if (sendResult == 0)
 	{
 		return false;
@@ -58,9 +58,10 @@ void Networking::Listen()
 	while(*listening)
 	{
 		ZeroMemory(buffer, 4096);
-		int bytesReceived = recv(*clientSocket, buffer, 4096, 0);
+		int bytesReceived = recv(*serverSocket, buffer, 4096, 0);
 		if (bytesReceived > 0)
 		{
+			bytesReceived++;
 			stringSafeQueue.push(std::string(buffer));
 		}
 	}

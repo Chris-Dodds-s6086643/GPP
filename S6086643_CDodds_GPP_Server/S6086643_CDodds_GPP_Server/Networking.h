@@ -13,7 +13,7 @@ enum socketSecurityEnum {
 	listeningSocket = 0
 };
 
-class Server
+class Networking
 {
 private:
 	WSADATA* winSockData = new WSADATA();
@@ -33,20 +33,20 @@ private:
 
 	char buffer[4096];
 
-	fd_set* master;
-
 	std::vector<std::thread*>* threads;
 
 	std::vector<SOCKET*>* sockets;
 
-	ThreadSafeQueue<std::string> incomingsQueue;
+	ThreadSafeQueue<std::string>& incomingsQueue;
 
 	ThreadSafeQueue<SOCKET*>* socketsConnected;
 
 	std::atomic<bool>* serverRunning;
 
 public:
-	Server();
+	Networking(ThreadSafeQueue<std::string>& incomingMessageQueue);
+
+	~Networking();
 
 	bool InitialiseServer();
 
@@ -59,5 +59,6 @@ public:
 	void OneSocketReceive(int socketNumber);
 
 	void GameLoop();
+	void EchoMessage(int senderID, std::string message);
 };
 

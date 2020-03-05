@@ -1,7 +1,8 @@
-#include "Server.h"
+#include "Networking.h"
 #include <sstream>
+#include <string>
 
-Server::Server()
+Networking::Networking(ThreadSafeQueue<std::string>& incomingMessageQueue) : incomingsQueue(incomingMessageQueue)
 {
 	hint->sin_family = AF_INET;
 	hint->sin_port = htons(54000);
@@ -12,12 +13,24 @@ Server::Server()
 
 	serverRunning = new std::atomic<bool>(true);
 	socketsConnected = new ThreadSafeQueue<SOCKET*>();
-
-	sockets = new std::vector<SOCKET*>();
-	threads = new std::vector<std::thread*>();
 }
 
-bool Server::InitialiseServer()
+Networking::~Networking()
+{
+	delete(threads);
+	delete(sockets);
+	delete(serverRunning);
+	delete(socketsConnected);
+	delete(winSockData);
+	delete(winSockVersion);
+	delete(listener);
+	delete(hint);
+	delete(client);
+	delete(clientSize);
+	delete(clientSocket);
+}
+
+bool Networking::InitialiseServer()
 {
 	*winSockVersion = MAKEWORD(2, 2);
 	int windowsSocketCheck = WSAStartup(*winSockVersion, winSockData);
@@ -43,13 +56,13 @@ bool Server::InitialiseServer()
 		return 0;
 	}
 	//std::thread threadTheFirst([this] { listenForConnections2(*this->serverRunning, *this->socketsConnected, *this->listener); });
-	std::thread threadTheFirst(&Server::listenForConnections2, this);
+	threads->push_back(new std::thread (&Networking::listenForConnections2, this));
 	//threadTheFirst.join();
 	//this->ListenForConnections();
-	GameLoop();
+	threads->push_back(new std::thread(&Networking::GameLoop, this));
 }
 
-void Server::ListenForConnections()
+void Networking::ListenForConnections()
 {
 	listen(*listener, SOMAXCONN);
 	clientSize = new int(sizeof(*client));
@@ -79,7 +92,7 @@ void Server::ListenForConnections()
 	Listen();
 }
 
-void Server::listenForConnections2()
+void Networking::listenForConnections2()
 {
 	char newHost[NI_MAXHOST];
 	char newService[NI_MAXSERV];
@@ -116,7 +129,7 @@ void Server::listenForConnections2()
 }
 
 
-void Server::Listen()
+void Networking::Listen()
 {
 
 	while (true)
@@ -146,11 +159,15 @@ void Server::Listen()
 	WSACleanup();
 }
 
-void Server::OneSocketReceive(int socketNumber)
+void Networking::OneSocketReceive(int socketNumber)
 {
 	char buffer[4096];
 	bool clientIsActive = true;
 
+	std::ostringstream idMessage;
+	idMessage << "ID::" << socketNumber;
+	std::string idMessageString = idMessage.str();
+	send(*this->sockets->at(socketNumber), idMessageString.c_str(), idMessageString.length(), 0);
 	while(this->serverRunning && clientIsActive)
 	{
 		ZeroMemory(&buffer, 4096);
@@ -170,9 +187,9 @@ void Server::OneSocketReceive(int socketNumber)
 		else
 		{
 			bytesReceived++;
-			std::ostringstream outMessage;
-			outMessage << socketNumber << ": " << buffer;
-			incomingsQueue.push(std::string(outMessage.str(), 0, bytesReceived));
+			//std::ostringstream outMessage;
+			//outMessage << socketNumber << ": " << buffer;
+			incomingsQueue.push(std::string(buffer, 0, bytesReceived));
 		}
 
 		//std::cout << std::string(buffer, 0, bytesReceived) << "\n";
@@ -181,7 +198,7 @@ void Server::OneSocketReceive(int socketNumber)
 	}
 }
 
-void Server::GameLoop()
+void Networking::GameLoop()
 {
 	while(*serverRunning)
 	{
@@ -191,21 +208,32 @@ void Server::GameLoop()
 			socketsConnected->tryPop(newSocketChecker);
 			sockets->push_back(newSocketChecker);
 			threads->push_back(new std::thread([this] { OneSocketReceive(sockets->size() - 1); }));
-			//std::thread threadTheFirst(&Server::listenForConnections2, this);
 		}
-		while (!incomingsQueue.isEmpty())
-		{
-			std::string outString;
-			incomingsQueue.tryPop(outString);
-			std::cout << outString << "\n";
-			for (size_t i = 1; i < sockets->size(); i++)
-			{
-				if (std::stoi(outString.substr(0,1)) != i)
-				{
-					send(*sockets->at(i), outString.c_str(), (outString.length() + 1), 0);
-				}
-			}
-		}
+		//while (!incomingsQueue.isEmpty())
+		//{
+		//	std::string outString;
+		//	incomingsQueue.tryPop(outString);
+		//	std::cout << outString << "\n";
+		//	for (size_t i = 1; i < sockets->size(); i++)
+		//	{
+		//		if (std::stoi(outString.substr(0,1)) != i)
+		//		{
+		//			send(*sockets->at(i), outString.c_str(), (outString.length() + 1), 0);
+		//		}
+		//	}
+		//}
 
+	}
+}
+
+void Networking::EchoMessage(int senderID, std::string message)
+{
+	//starts at 1 as the 0 slot is used for the listening socket and therefore does not need to be sent messages.
+	for (size_t i = 1; i < sockets->size(); i++)
+	{
+		if (senderID != i)
+		{
+			send(*sockets->at(i), message.c_str(), (message.length() + 1), 0);
+		}
 	}
 }

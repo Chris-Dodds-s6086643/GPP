@@ -1,15 +1,25 @@
 #include <iostream>
 #include <WS2tcpip.h>
 #include <string>
-#include "Server.h"
+#include "Networking.h"
+#include "Deck.h"
+#include "GameController.h"
 
 
 
 
 int main()
 {
-	Server* s = new Server();
-	s->InitialiseServer();
+	ThreadSafeQueue<std::string> messageQueue;
+	Networking s(messageQueue);
+	Deck* d = new Deck();
+	GameController* g = new GameController(messageQueue, s);
+	s.InitialiseServer();
+	std::thread thread(&GameController::Update, g);
+	while (true)
+	{
+
+	}
 	return 0;
 }
 
