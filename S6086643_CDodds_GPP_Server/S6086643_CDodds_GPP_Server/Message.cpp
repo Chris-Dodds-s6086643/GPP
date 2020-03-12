@@ -39,9 +39,10 @@ std::vector<std::string> Message::SplitString(std::string message)
 	int pos = 0;
 	std::vector<std::string> stringVector;
 	std::string delimiter = "::";
-	while (pos = message.find(delimiter) != std::string::npos)
+	while ((pos = message.find(delimiter)) != std::string::npos)
 	{
-		stringVector.push_back(std::string(message.substr(0, pos)));
+		std::string newMessagePart = std::string(message.substr(0, pos));
+		stringVector.push_back(newMessagePart);
 		message.erase(0, pos + delimiter.length());
 	}
 	return stringVector;

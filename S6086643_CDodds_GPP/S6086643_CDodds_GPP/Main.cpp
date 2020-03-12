@@ -13,7 +13,16 @@ float fastSquareRoot(float number);
 
 sf::Vector2f DirectionVector(sf::Vector2i origin, sf::Vector2i newLocation);
 
+void gameSetupAndRunForTestingOnlyFuck();
+
 int main()
+{
+	gameSetupAndRunForTestingOnlyFuck();
+
+	return 0;
+}
+
+void gameSetupAndRunForTestingOnlyFuck()
 {
 	sf::RenderWindow window(sf::VideoMode(960, 540), "SFML works!");
 	sf::CircleShape shape(100.f);
@@ -37,6 +46,7 @@ int main()
 			if (message.substr(0, 2) == "ID")
 			{
 				ID = std::stoi(message.substr(message.length() - 1, 1));
+				networking.setID(ID);
 			}
 		}
 		oldMousePos = mousePos;
@@ -67,7 +77,7 @@ int main()
 		window.draw(shape);
 		window.display();
 	}
-	return 0;
+	
 }
 
 float fastSquareRoot(float number)
@@ -93,10 +103,10 @@ sf::Vector2f DirectionVector(sf::Vector2i origin, sf::Vector2i newLocation)
 	double scale = 0.01f;
 	float magnitude = std::sqrt((float)(differenceVector.x * differenceVector.x) + (differenceVector.y * differenceVector.y));
 	magnitude = magnitude > 0 ? magnitude : 1;
-	if (std::abs(differenceVector.x) > 0 || std::abs(differenceVector.y) > 0)
-	{
-		//std::cout << "differenceVector = " << differenceVector.x << ", " << differenceVector.y << "\n" << "magnitude:" << magnitude;
-		//std::cout << "OUTPUT: X: " << differenceVector.x / magnitude << ", Y: " << differenceVector.y / magnitude << "\n";
-	}
+	//if (std::abs(differenceVector.x) > 0 || std::abs(differenceVector.y) > 0)
+	//{
+	//	//std::cout << "differenceVector = " << differenceVector.x << ", " << differenceVector.y << "\n" << "magnitude:" << magnitude;
+	//	//std::cout << "OUTPUT: X: " << differenceVector.x / magnitude << ", Y: " << differenceVector.y / magnitude << "\n";
+	//}
 	return sf::Vector2f((int)((differenceVector.x / magnitude)/scale) * scale, (int)((differenceVector.y / magnitude) / scale) * scale);
 }

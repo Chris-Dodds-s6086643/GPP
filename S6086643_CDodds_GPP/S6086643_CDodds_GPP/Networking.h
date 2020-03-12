@@ -22,6 +22,7 @@ private:
 	SOCKET* serverSocket;
 	std::atomic<bool>* listening;
 	std::thread* listeningThread;
+	int _id = 0;
 	
 
 
@@ -38,6 +39,8 @@ public:
 	bool Send(std::string &message);
 
 	void Listen();
+
+	void setID(int id) { _id = id; }
 
 	~Networking();
 };

@@ -9,12 +9,16 @@ void GameController::Update()
 		{
 			std::string outString;
 			messageQueue.tryPop(outString);
+			int senderID = 0;
 			//HandleMessage(outString);
-			std::string stringPointer = (Message::SplitString(outString)).at(Message::messageSegmets::id);
-
-			int senderID = std::stoi(stringPointer);
-		
-			networking.EchoMessage(senderID, outString);
+			std::vector<std::string> splitString = Message::SplitString(outString);
+			std::string stringID = splitString.at(Message::messageSegmets::id);
+			senderID = std::stoi(stringID);
+			if (splitString.size() > 1 && splitString.at(1) == "QUIT")
+			{
+				networking.setActiveTheSecond(senderID);
+			}
+			networking.EchoMessageTheThird(senderID, outString);
 		}
 	}
 }

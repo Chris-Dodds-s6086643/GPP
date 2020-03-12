@@ -6,6 +6,10 @@
 #include <vector>
 #include "ThreadSafeQueue.h"
 #include <atomic>
+#include <unordered_map>
+#include "ClientPlayer.h"
+#include "ThreadSafeUnordoredMap.h"	
+
 
 #pragma comment (lib, "ws2_32.lib")
 
@@ -30,7 +34,7 @@ private:
 
 	char host[NI_MAXHOST];
 	char service[NI_MAXHOST];
-
+	
 	char buffer[4096];
 
 	std::vector<std::thread*>* threads;
@@ -42,6 +46,19 @@ private:
 	ThreadSafeQueue<SOCKET*>* socketsConnected;
 
 	std::atomic<bool>* serverRunning;
+
+	std::vector<std::atomic<bool>*> activeStatus;
+
+	std::unordered_map<int, ClientPlayer*> playersMap;
+	std::unordered_map<int, ClientPlayer*>::hasher playersMapHashFn;
+
+	ThreadSafeUnorderedMap<int, ClientPlayer*> playersMapTheSecond;
+	std::unordered_map<int, ClientPlayer*>::hasher playersMapHashFnTheSecond;
+
+	mutable std::mutex playersMapMutex;
+
+	ThreadSafeQueue<int> threadSafePlayerKeysToRemove;
+
 
 public:
 	Networking(ThreadSafeQueue<std::string>& incomingMessageQueue);
@@ -58,7 +75,22 @@ public:
 
 	void OneSocketReceive(int socketNumber);
 
+	void OneSocketReceiveTheSecond(int socketNumber);
+
+	void OneSocketReceiveTheThird(int socketNumber);
+
 	void GameLoop();
+	void GameLoopTheSecond();
+	void GameLoopTheThird();
 	void EchoMessage(int senderID, std::string message);
+
+	void EchoMessageTheSecond(int senderID, std::string message);
+
+	void EchoMessageTheThird(int senderID, std::string message);
+
+	void sendToClient(ClientPlayer* client, std::string message);
+
+	void setActive(int ID);
+	void setActiveTheSecond(int ID);
 };
 

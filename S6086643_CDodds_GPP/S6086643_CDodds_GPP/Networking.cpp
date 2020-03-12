@@ -1,9 +1,18 @@
 #include "Networking.h"
+#include <sstream>
 
 
 Networking::~Networking()
 {
-	*listening = false;
+	while (!listening->is_lock_free()) {}
+	listening->store(false);
+	//std::ostringstream quitMessage;
+	//quitMessage << _id << "::QUIT";
+	//Send(quitMessage.c_str());
+	std::ostringstream quitMessage;
+	quitMessage << _id << "::QUIT::";
+	std::string sendingMessage = quitMessage.str();
+	Send(sendingMessage);
 	listeningThread->join();
 	delete(listeningThread);
 }
@@ -18,7 +27,7 @@ void Networking::NetworkingStartUp()
 	serverSocket = new SOCKET(socket(AF_INET, SOCK_STREAM, 0));
 
 
-	if (*serverSocket == INVALID_SOCKET)
+	if(*serverSocket == INVALID_SOCKET)
 	{
 		return;
 	}
