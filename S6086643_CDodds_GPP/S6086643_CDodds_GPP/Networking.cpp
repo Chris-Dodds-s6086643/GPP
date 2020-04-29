@@ -6,14 +6,14 @@ Networking::~Networking()
 {
 	while (!listening->is_lock_free()) {}
 	listening->store(false);
-	//std::ostringstream quitMessage;
-	//quitMessage << _id << "::QUIT";
-	//Send(quitMessage.c_str());
 	std::ostringstream quitMessage;
 	quitMessage << _id << "::QUIT::";
 	std::string sendingMessage = quitMessage.str();
 	Send(sendingMessage);
-	listeningThread->join();
+	if (listeningThread != nullptr)
+	{
+		listeningThread->join();
+	}
 	delete(listeningThread);
 }
 

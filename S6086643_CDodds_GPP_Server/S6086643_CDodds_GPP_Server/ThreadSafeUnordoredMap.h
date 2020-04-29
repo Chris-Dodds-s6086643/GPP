@@ -49,14 +49,6 @@ public:
 	void functionOverMap(std::function<void(T, std::string)>& functionToApply, std::string messageToSend, int senderID)
 	{
 		std::lock_guard<std::mutex> lock(mapMutex);
-		//for each (std::pair<K, T> var in unorderedMap)
-		//{
-		//	if (var.first != senderID)
-		//	{
-		//		functionToApply(var.second, messageToSend);
-		//	}
-		//}
-
 		for (std::unordered_map<int, ClientPlayer*>::iterator i = unorderedMap.begin(); i != unorderedMap.end(); i++)
 		{
 			if (i->first != senderID)
@@ -64,8 +56,6 @@ public:
 				functionToApply(i->second, messageToSend);
 			}
 		}
-
-		
 	}
 
 	auto getHashFunction() 
