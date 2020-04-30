@@ -19,6 +19,7 @@ enum class Result : int
 	Draw = 2
 };
 
+
 class InputManager
 {
 private:
@@ -28,8 +29,9 @@ private:
 	GameState gameState;
 	MessageInputs thisPlayerInput;
 	MessageInputs OpponentInputs;
-	int id;
+	int thisClientID;
 	int opponentID;
+	bool terminalNeedsUpdating;
 public:
 	InputManager(ThreadSafeQueue<Message>& inIncomingMessageQueue) :
 		incomingMessageQueue(inIncomingMessageQueue),
@@ -38,7 +40,8 @@ public:
 		gameState(GameState::WaitingForMatch),
 		thisPlayerInput(MessageInputs::InputError),
 		OpponentInputs(MessageInputs::InputError),
-		id(ErrorInt)
+		thisClientID(ErrorInt),
+		terminalNeedsUpdating(true)
 	{
 		networking = new Networking(incomingMessageQueue);
 		GameLoop();
@@ -52,8 +55,27 @@ public:
 
 	Result DetermineGameResult();
 
+	GameState GetGameState() 
+	{
+		terminalNeedsUpdating = false;
+		return gameState; 
+	}
+
+	void SetGameState(GameState inGameState)
+	{
+		gameState = inGameState;
+		terminalNeedsUpdating = true;
+	}
+
 	std::string toStringMessageInput(MessageInputs messageInput);
 
-	~InputManager() {}
+	~InputManager() 
+	{
+		std::vector<int> params;
+		Message quitMessage(thisClientID, MessagePurpose::Quit, params);
+		quitMessage.setOpponentID(opponentID);
+		networking->SendMessageToServer(quitMessage);
+		delete networking;
+	}
 };
 

@@ -5,7 +5,7 @@ void Networking::SendMessageToServer(Message message)
 	int sendResult = send(*serverSocket, message.ToString().c_str(), message.ToString().length() + 1, 0);
 	if (sendResult == 0)
 		std::cerr << "ERROR SENDING MESSAGE: " << message.ToString() << "\n";
-	std::cout << "\n Message sent: " << message.ToString();
+	//std::cout << "\n Message sent: " << message.ToString();
 }
 
 void Networking::ListenForMessages()

@@ -5,79 +5,82 @@ void InputManager::GameLoop()
 	std::string lineGot;
 	while (running)
 	{
-		switch (gameState)
+		if (terminalNeedsUpdating)
 		{
-			case GameState::WaitingForMatch:
+			switch (GetGameState())
 			{
-				opponentID = ErrorInt;
-				std::cout << ">Waiting to be placed into a match with another player;";
-				break;
-			}
-			case GameState::WaitingForThisPlayerInput:
-			{
-				do
+				case GameState::WaitingForMatch:
 				{
-					std::cout << ">Please Enter Your Desired choice (R or 0 for Rock, P or 1 for Paper, S or 2 for Scissors) \n>";
-					std::getline(std::cin, lineGot);
-					if (lineGot.length() > 0)
+					opponentID = ErrorInt;
+					std::cout << ">Waiting to be placed into a match with another player;";
+					break;
+				}
+				case GameState::WaitingForThisPlayerInput:
+				{
+					do
 					{
-						lineGot = std::toupper(lineGot[0]);
+						std::cout << ">Please Enter Your Desired choice (R or 0 for Rock, P or 1 for Paper, S or 2 for Scissors) \n>";
+						std::getline(std::cin, lineGot);
+						if (lineGot.length() > 0)
+						{
+							lineGot = std::toupper(lineGot[0]);
+						}
+					} while (lineGot != "R" && lineGot != "P" && lineGot != "S" &&
+						lineGot != "0" && lineGot != "1" && lineGot != "2");
+					setPlayerInput(lineGot);
+					std::cout << ">Thank you, you selected: " << toStringMessageInput(thisPlayerInput) << "\n";
+					if (OpponentInputs != MessageInputs::InputError)
+					{
+						SetGameState(GameState::MatchResult);
 					}
-				} while (lineGot != "R" && lineGot != "P" && lineGot != "S" &&
-					lineGot != "0" && lineGot != "1" && lineGot != "2");
-				std::cout << "\n>Thank you, you entered: " << lineGot << "\n";
-				setPlayerInput(lineGot);
-				if (OpponentInputs != MessageInputs::InputError)
-				{
-					gameState = GameState::MatchResult;
-				}
-				else
-				{
-					gameState = GameState::WaitingForOpponentinput;
-				}
-				break;
-			}
-			case GameState::WaitingForOpponentinput:
-			{
-				std::cout << "Waiting for Opponents Input; Thank you for your patience\n";
-				break;
-			}
-			case GameState::MatchResult:
-			{
-				Result r = DetermineGameResult();
-				std::cout << "You Selected: " << toStringMessageInput(thisPlayerInput) << ", Your Opponent Selected: " << toStringMessageInput(OpponentInputs) << "\n";
-				switch (r)
-				{
-				case Result::Loss:
-					std::cout << "Unfortunately this time you lost.\n";
-					gameState = GameState::WaitingForMatch;
-					break;
-				case Result::Win:
-					std::cout << "Congratulations, this game is yours.\n";
-					gameState = GameState::WaitingForMatch;
-					break;
-				case Result::Draw:
-					std::cout << "There was a draw please select again";
-					gameState = GameState::WaitingForThisPlayerInput;
-					break;
-				default:
+					else
+					{
+						SetGameState(GameState::WaitingForOpponentinput);
+					}
 					break;
 				}
-				thisPlayerInput = MessageInputs::InputError;
-				OpponentInputs = MessageInputs::InputError;
-				std::vector<int> parameters{ (int)r };
-				Message endGameMessage(id, MessagePurpose::GameEnd, parameters);
-				endGameMessage.setOpponentID(opponentID);
-				networking->SendMessageToServer(endGameMessage);
-				break;
-			}
-			default: 
-			{
-				std::cerr << "GameState is Error, the fuck?";
-				break;
+				case GameState::WaitingForOpponentinput:
+				{
+					std::cout << "Waiting for Opponents Input; Thank you for your patience\n";
+					break;
+				}
+				case GameState::MatchResult:
+				{
+					Result r = DetermineGameResult();
+					std::cout << "You Selected: " << toStringMessageInput(thisPlayerInput) << ", Your Opponent Selected: " << toStringMessageInput(OpponentInputs) << "\n";
+					switch (r)
+					{
+					case Result::Loss:
+						std::cout << "Unfortunately this time you lost.\n";
+						SetGameState(GameState::WaitingForMatch);
+						break;
+					case Result::Win:
+						std::cout << "Congratulations, this game is yours.\n";
+						SetGameState(GameState::WaitingForMatch);
+						break;
+					case Result::Draw:
+						std::cout << "There was a draw please select again";
+						SetGameState(GameState::WaitingForThisPlayerInput);
+						break;
+					default:
+						break;
+					}
+					thisPlayerInput = MessageInputs::InputError;
+					OpponentInputs = MessageInputs::InputError;
+					std::vector<int> parameters{ (int)r };
+					Message endGameMessage(thisClientID, MessagePurpose::GameEnd, parameters);
+					endGameMessage.setOpponentID(opponentID);
+					networking->SendMessageToServer(endGameMessage);
+					break;
+				}
+				default: 
+				{
+					std::cerr << "GameState is Error, the fuck?";
+					break;
+				}
 			}
 		}
-		while (incomingMessageQueue.isEmpty()) {}
+		//while (incomingMessageQueue.isEmpty()) {}
 		HandleMessages();
 	}
 }
@@ -102,7 +105,7 @@ void InputManager::setPlayerInput(std::string stringInput)
 	}
 	std::vector<int> input;
 	input.push_back((int)thisPlayerInput);
-	Message inputTakenMessage(id, MessagePurpose::Input, input);
+	Message inputTakenMessage(thisClientID, MessagePurpose::Input, input);
 	inputTakenMessage.setOpponentID(opponentID);
 	networking->SendMessageToServer(inputTakenMessage);
 }
@@ -113,7 +116,7 @@ void InputManager::HandleMessages()
 	Message messageFromQueue;
 	while (incomingMessageQueue.tryPop(messageFromQueue))
 	{
-		std::cout << "\nMessage Received: " << messageFromQueue.ToString() << "\n";
+		//std::cout << "\nMessage Received: " << messageFromQueue.ToString() << "\n";
 		switch (messageFromQueue.GetMessagePurpose())
 		{
 			case MessagePurpose::Join:
@@ -121,17 +124,17 @@ void InputManager::HandleMessages()
 				if (messageFromQueue.GetOpponentID() != ErrorInt)
 				{
 					opponentID = messageFromQueue.GetOpponentID();
-					gameState = GameState::WaitingForThisPlayerInput;
+					SetGameState(GameState::WaitingForThisPlayerInput);
 				}
 				else
 				{
-					id = messageFromQueue.GetID();
+					thisClientID = messageFromQueue.GetID();
 				}
 				break;
 			}
 			case MessagePurpose::Quit:
 			{
-				gameState = GameState::WaitingForMatch;
+				SetGameState(GameState::WaitingForMatch);
 				break;
 			}
 			case MessagePurpose::Input:
@@ -139,11 +142,11 @@ void InputManager::HandleMessages()
 				OpponentInputs = (MessageInputs)(messageFromQueue.GetParameters().at(0));
 				if (thisPlayerInput != MessageInputs::InputError)
 				{
-					gameState = GameState::MatchResult;
+					SetGameState(GameState::MatchResult);
 				}
 				else
 				{
-					gameState = GameState::WaitingForThisPlayerInput;
+					SetGameState(GameState::WaitingForThisPlayerInput);
 				}
 				break;
 			}
@@ -151,11 +154,11 @@ void InputManager::HandleMessages()
 			{
 				if (messageFromQueue.GetOpponentID() == ErrorInt)
 				{
-					gameState = GameState::WaitingForMatch;
+					SetGameState(GameState::WaitingForMatch);
 				}
 				else
 				{
-					gameState = GameState::WaitingForThisPlayerInput;
+					SetGameState(GameState::WaitingForThisPlayerInput);
 				}
 				break;
 			}

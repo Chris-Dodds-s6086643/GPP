@@ -30,18 +30,6 @@ void Networking::ListenForConnections()
 				inet_ntop(AF_INET, &newClient.sin_addr, host, NI_MAXHOST);
 				std::cout << host << " Connected On Port " << ntohs(newClient.sin_port) << "\n";
 			}
-
-			//OLD Implementation when attempting to use the ThreadSafeVector;
-			//Find unique ID for the new ClientPlayer. Although now I think about it although this is interesting it may not necessarily be particularly useful.
-			//int newID = 0;
-			//std::function<bool(ClientPlayer*, int) > idCheckingFunction = [](ClientPlayer* cp, int idToCheck) -> bool
-			//{
-			//	return cp->GetPlayerID() != idToCheck; //returns true if the id is not the give ClientPlayer's id;
-			//};
-			//while (!clients.MapBoolFunctionParamIntReturnBool(idCheckingFunction, newID)) //performs the function on all the objects in the vector.
-			//{
-			//	newID++;
-			//} 
 			int newID = clientMap.GetNextAvailableKeyId();
 			std::thread* threadAstaire = new std::thread([this, newID] {ReceiveFromOnePlayer(newID);});
 			ClientPlayer* pete = new ClientPlayer(newSocket, threadAstaire, newID);
@@ -57,11 +45,6 @@ void Networking::ListenForConnections()
 void Networking::ReceiveFromOnePlayer(int playerID)
 {
 	char buffer[4096];
-	
-	//std::ostringstream idMessage;
-	//idMessage << "ID::" << playerID
-	//send(*(clientMap.AccessValue(playerID)->GetSocket()), idMessage.str().c_str(), idMessage.str().length(), 0);
-
 	while (!this->serverRunning.is_lock_free()) {}
 	while (this->serverRunning && clientMap.AccessValue(playerID)->IsPlayerActive())
 	{
@@ -107,6 +90,10 @@ void Networking::GameLoop()
 			case MessagePurpose::Quit:
 			{
 				clientMap.RemoveValueAtKey(messageFromQueue.GetID());
+				if (messageFromQueue.GetOpponentID() != ErrorInt)
+				{
+					SendMessageToClientPlayerByID(messageFromQueue.GetOpponentID(), messageFromQueue); 
+				}
 				break;
 			}
 			case MessagePurpose::Input:
