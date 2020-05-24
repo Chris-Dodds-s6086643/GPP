@@ -139,6 +139,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ClientPlayer.h" />
+    <ClInclude Include="Encryption.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Networking.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientPlayer.cpp" />
+    <ClCompile Include="Encryption.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Networking.cpp" />
   </ItemGroup>

@@ -53,6 +53,9 @@ void Networking::ReceiveFromOnePlayer(int playerID)
 		if (bytesReceived == SOCKET_ERROR)
 		{
 			std::cerr << "Error in Recieving on playter ID: " << playerID << "\n" << WSAGetLastError() << "\n";
+			std::vector<int> params;
+			Message quitMessage(playerID, MessagePurpose::Quit, params);
+			EchoMessage(quitMessage);
 			break;
 		}
 		bytesReceived++;
@@ -109,7 +112,7 @@ void Networking::GameLoop()
 				{
 					case Result::Loss:
 					{
-						// I guess you'd update some statistics;
+						// I guess you'd update some statistics; if nothing changes here put both this and Result::Win into default;
 						playerIDsWaitingForMatch.push_back(messageFromQueue.GetID());
 						break;
 					}

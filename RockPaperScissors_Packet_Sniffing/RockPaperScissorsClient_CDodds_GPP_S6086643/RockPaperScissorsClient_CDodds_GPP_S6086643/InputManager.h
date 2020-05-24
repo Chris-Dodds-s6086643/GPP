@@ -47,6 +47,8 @@ public:
 		GameLoop();
 	}
 
+	BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
+
 	void GameLoop();
 
 	void setPlayerInput(std::string stringInput);

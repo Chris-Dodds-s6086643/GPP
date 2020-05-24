@@ -70,8 +70,14 @@ public:
 
 	void ListenForMessages();
 
+	void StopListening()
+	{
+		listening.store(false);
+	}
+
 	~Networking()
 	{
+		listening.store(false);
 		listeningThread->join();
 		delete listeningThread;
 		delete serverSocket;

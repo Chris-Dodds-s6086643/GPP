@@ -1,26 +1,45 @@
-// RockPaperScissorsClient_CDodds_GPP_S6086643.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
-#include <iostream>
+#pragma once	
 #include "Networking.h"
 #include "InputManager.h"
 #include "ThreadSafeQueue.h"
 #include "Message.h"
+#include <iostream>
+//#include <Windows.h>
+//#include <stdio.h>
+//#include <atomic>
+//
+//
+//std::atomic<bool>* isConsoleOpen;
+//
+//BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
+//{
+//	switch (fdwCtrlType)
+//	{
+//	case CTRL_CLOSE_EVENT:
+//		std::cout << "Closing thing;";
+//	case CTRL_LOGOFF_EVENT:
+//		std::cout << "Logoff thing;";
+//	case CTRL_SHUTDOWN_EVENT:
+//		isConsoleOpen->store(false);
+//		std::cout << "Shutdown thing;";
+//		return TRUE;
+//	default:
+//		return FALSE;
+//		break;
+//	}
+//}
+
 int main()
 {
-    ThreadSafeQueue<Message> threadSafeMessageQueue;
-    InputManager iM(threadSafeMessageQueue);
-    std::cout << "Hello World!\n";
+	/*if (SetConsoleCtrlHandler(CtrlHandler, TRUE))
+	{*/
+	//isConsoleOpen = new std::atomic<bool>(true);
+	ThreadSafeQueue<Message> threadSafeMessageQueue;
+	InputManager iM(threadSafeMessageQueue);
+	std::cout << "Hello World!\n";
+	//}
+	//else
+	//{
+	//}
     
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

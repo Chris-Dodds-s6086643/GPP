@@ -69,6 +69,12 @@ public:
 		opponentID(ErrorInt),
 		parameters(inParamaters)
 	{}
+	Message(int inSenderID, MessagePurpose inMessagePurpose, int inOpponentId, std::vector<int> inParamaters) :
+		senderID(inSenderID),
+		messagePurpose(inMessagePurpose),
+		opponentID(inOpponentId),
+		parameters(inParamaters)
+	{}
 
 	int GetID()
 	{

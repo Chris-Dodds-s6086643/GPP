@@ -11,13 +11,8 @@
 #include "Message.h"
 #include <string>
 #include "Match.h"
+#include "Encryption.h"
 #pragma comment (lib, "ws2_32.lib")
-struct MatchKa
-{
-	int gameID;
-	int playerOneID;
-	int playerTwoID;
-};
 
 class Networking
 {
@@ -45,7 +40,7 @@ private:
 #pragma region Message Handling Variables
 	char buffer[4096];
 	ThreadSafeQueue<Message> messageQueue;
-
+	Encryption* encryption;
 #pragma endregion
 public:
 	void ListenForConnections();
@@ -60,6 +55,7 @@ public:
 		ZeroMemory(service, NI_MAXSERV);
 		ZeroMemory(buffer, 4096);
 		serverRunning.store(true);
+		encryption = new Encryption();
 #pragma endregion
 
 #pragma region initialise and bind listening socket
@@ -117,6 +113,7 @@ public:
 		delete winSockData;
 		delete winSockVersion;
 		delete hint;
+		delete encryption;
 		for (size_t i = 0; i < threads.size(); i++)
 		{
 			if (threads[i] != nullptr)

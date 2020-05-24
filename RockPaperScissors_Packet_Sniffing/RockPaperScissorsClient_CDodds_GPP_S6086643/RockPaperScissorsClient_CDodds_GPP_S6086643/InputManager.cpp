@@ -12,7 +12,7 @@ void InputManager::GameLoop()
 				case GameState::WaitingForMatch:
 				{
 					opponentID = ErrorInt;
-					std::cout << ">Waiting to be placed into a match with another player;";
+					std::cout << ">Waiting to be placed into a match with another player;\n";
 					break;
 				}
 				case GameState::WaitingForThisPlayerInput:
@@ -26,7 +26,13 @@ void InputManager::GameLoop()
 							lineGot = std::toupper(lineGot[0]);
 						}
 					} while (lineGot != "R" && lineGot != "P" && lineGot != "S" &&
-						lineGot != "0" && lineGot != "1" && lineGot != "2");
+						lineGot != "0" && lineGot != "1" && lineGot != "2" && lineGot != "Q");
+					if (lineGot == "Q")
+					{
+						while (!running.is_lock_free()) {}
+						running.store(false);
+						break;
+					}
 					setPlayerInput(lineGot);
 					std::cout << ">Thank you, you selected: " << toStringMessageInput(thisPlayerInput) << "\n";
 					if (OpponentInputs != MessageInputs::InputError)
@@ -59,7 +65,7 @@ void InputManager::GameLoop()
 						SetGameState(GameState::WaitingForMatch);
 						break;
 					case Result::Draw:
-						std::cout << "There was a draw please select again";
+						std::cout << "There was a draw please select again\n";
 						SetGameState(GameState::WaitingForThisPlayerInput);
 						break;
 					default:
@@ -75,7 +81,7 @@ void InputManager::GameLoop()
 				}
 				default: 
 				{
-					std::cerr << "GameState is Error, the fuck?";
+					std::cerr << "gameState is Error\n";
 					break;
 				}
 			}
@@ -83,6 +89,7 @@ void InputManager::GameLoop()
 		//while (incomingMessageQueue.isEmpty()) {}
 		HandleMessages();
 	}
+	networking->StopListening();
 }
 
 void InputManager::setPlayerInput(std::string stringInput)
@@ -156,9 +163,13 @@ void InputManager::HandleMessages()
 				{
 					SetGameState(GameState::WaitingForMatch);
 				}
-				else
+				else if(thisPlayerInput == ErrorInt)
 				{
 					SetGameState(GameState::WaitingForThisPlayerInput);
+				}
+				else
+				{
+					SetGameState(GameState::WaitingForOpponentinput);
 				}
 				break;
 			}
