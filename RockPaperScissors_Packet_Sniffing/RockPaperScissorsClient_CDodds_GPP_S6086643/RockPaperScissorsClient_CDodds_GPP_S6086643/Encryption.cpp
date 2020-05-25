@@ -19,7 +19,7 @@ Encryption::Encryption()
 	//awful hackaround to get some basic prime numbers to work from.
 	primeNumbers =
 	{
-		11, 13, 17, 19, 23, 29, /*31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199*/
+		/*11, 13, 17,*/ 19, 23, 29, /*31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199*/
 	};
 	primeNumberOne = ErrorInt;
 	primeNumberTwo = ErrorInt;
@@ -28,7 +28,7 @@ Encryption::Encryption()
 	keyModulus = ErrorInt;
 	phiKeyModulus = ErrorInt;
 #pragma endregion
-	SetFixedPrimeNumbers();
+	GenerateRandomPrimeNumbers();
 	GenerateKeys();
 }
 
@@ -195,7 +195,7 @@ long long int Encryption::ModularExponentiation(long long int integer, long long
 }
 
 //extrapolated from https://www.youtube.com/watch?v=p5gn2hj51hs; maths function used to check the validity of the created key.
-bool Encryption::AreCoPrime(int lhs , long long int rhs)
+bool Encryption::AreCoPrime(int lhs, long long int rhs)
 {
 #pragma region Find Greatest Common Divisor
 	long long int smallerNum = lhs < rhs ? lhs : rhs;

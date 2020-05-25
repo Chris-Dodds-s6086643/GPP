@@ -5,7 +5,7 @@
 
 static std::string StringDelimiter = "::";
 static std::string StringEndingDelimiter = "~~";
-static int ErrorInt = -8;
+static int ErrorInt = 183;
 
 static std::vector<std::string> SplitString(std::string& stringToSplit, std::string delimiter)
 {

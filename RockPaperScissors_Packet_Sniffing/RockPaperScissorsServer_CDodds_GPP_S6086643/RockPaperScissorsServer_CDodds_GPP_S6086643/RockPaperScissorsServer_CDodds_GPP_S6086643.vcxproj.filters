@@ -45,6 +45,9 @@
     <ClInclude Include="Encryption.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="KeyModulusPair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Networking.cpp">

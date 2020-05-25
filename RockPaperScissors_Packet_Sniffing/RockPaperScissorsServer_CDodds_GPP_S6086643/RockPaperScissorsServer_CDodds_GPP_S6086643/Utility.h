@@ -5,14 +5,15 @@
 
 static enum class Result : int
 {
-	Loss = 0,
-	Win = 1,
-	Draw = 2
+	//2 based so that RSA can actually encrypt the thing.
+	Loss = 2,
+	Win = 3,
+	Draw = 4
 };
 
 static std::string StringDelimiter = "::";
 static std::string StringEndingDelimiter = "~~";
-static int ErrorInt = -8;
+static int ErrorInt = 183;
 
 static std::vector<std::string> SplitString(std::string& stringToSplit, std::string delimiter)
 {

@@ -135,7 +135,9 @@ void InputManager::HandleMessages()
 				}
 				else
 				{
-					thisClientID = messageFromQueue.GetID();
+					std::vector<int> params;
+					Message acknowledgementJoinMessage = Message(messageFromQueue.GetID(), MessagePurpose::Join, params);
+					networking->SendMessageToServer(acknowledgementJoinMessage);
 				}
 				break;
 			}
@@ -178,8 +180,17 @@ void InputManager::HandleMessages()
 				std::cerr << "error in pulling message from queue";
 				break;
 			}
+			case MessagePurpose::PublicKeyMessage:
+			{
+				thisClientID = messageFromQueue.GetID();
+				std::vector<int> params;
+				Message publicKeyMessage = Message(thisClientID, MessagePurpose::PublicKeyMessage, params);
+				networking->SendMessageToServer(publicKeyMessage);
+				break;
+			}
 			default:
 			{
+				std::cout << "message not right somehow: " << messageFromQueue.ToString();
 				break;
 			}
 		}
@@ -225,7 +236,7 @@ Result InputManager::DetermineGameResult()
 			return Result::Loss;
 		}
 	}
-}
+ }
 
 std::string InputManager::toStringMessageInput(MessageInputs messageInput)
 {

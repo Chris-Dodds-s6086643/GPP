@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClInclude Include="ClientPlayer.h" />
     <ClInclude Include="Encryption.h" />
+    <ClInclude Include="KeyModulusPair.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Networking.h" />

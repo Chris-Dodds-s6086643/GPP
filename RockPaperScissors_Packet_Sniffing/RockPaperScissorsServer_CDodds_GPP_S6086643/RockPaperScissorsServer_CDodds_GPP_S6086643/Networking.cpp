@@ -30,14 +30,19 @@ void Networking::ListenForConnections()
 				inet_ntop(AF_INET, &newClient.sin_addr, host, NI_MAXHOST);
 				std::cout << host << " Connected On Port " << ntohs(newClient.sin_port) << "\n";
 			}
+			//Create new ClientPlayer, with a unique ID, storing their socket, a thread that listens and puts their messages onto the messageQueue;
 			int newID = clientMap.GetNextAvailableKeyId();
-			std::thread* threadAstaire = new std::thread([this, newID] {ReceiveFromOnePlayer(newID);});
-			ClientPlayer* pete = new ClientPlayer(newSocket, threadAstaire, newID);
-			clientMap.Emplace(newID, pete);
-			std::vector<int> emptyIntVector;
-			Message joiningMessage(newID, MessagePurpose::Join, emptyIntVector);
-			//EchoMessage(joiningMessage);
-			messageQueue.push(joiningMessage);
+			ClientPlayer* newPlayer = new ClientPlayer(newSocket, new std::thread([this, newID] { ReceiveFromOnePlayer(newID); }), newID);
+			clientMap.Emplace(newID, newPlayer);
+
+			//create a message to be sent to the joining player containing the public key. Would need a hash/proof value to prevent man-in-the-middle attacks.
+			std::vector<int> parametersVector;
+			//using ErrorInt encrypted with the privateKey as a makeshift proof of identity.
+			parametersVector.push_back(encryption->EncryptOrDecipherIntWithPrivateKey(ErrorInt));
+			parametersVector.push_back(encryption->GetPublicKey());
+			parametersVector.push_back(encryption->GetKeyModulus());
+			Message publicKeyMessage(newID, MessagePurpose::PublicKeyMessage, parametersVector);
+			SendMessageToClientPlayerByID(newID, publicKeyMessage);
 		}
 	}
 }
@@ -63,12 +68,27 @@ void Networking::ReceiveFromOnePlayer(int playerID)
 		std::vector<std::string> messageStrings = SplitString(bufferString, StringEndingDelimiter);
 		for (int i = 0; i < messageStrings.size(); i++)
 		{
-			Message incomingMessage = Message(messageStrings.at(i));
-			if (incomingMessage.GetMessagePurpose() == MessagePurpose::Quit)
+			Message potentiallyEncryptedIncomingMessage = Message(messageStrings.at(i));
+			//if purpose is readable it isn't totally encrypted; otherwise  it should be the publicKeyMessage and have params of:\n
+			// [0] client encrypted ErrorInt with their private key, [1] unencrypted public key, [2] unencrypted modulus
+			if (potentiallyEncryptedIncomingMessage.GetMessagePurpose() == MessagePurpose::PublicKeyMessage &&
+				encryption->EncryptOrDecipherInt(potentiallyEncryptedIncomingMessage.GetParameters().at(0), potentiallyEncryptedIncomingMessage.GetParameters().at(1), potentiallyEncryptedIncomingMessage.GetParameters().at(2)) == ErrorInt)
 			{
-				clientMap.AccessValue(playerID)->setPlayerInactive();
+				clientMap.AccessValue(playerID)->SetPublicKey(new KeyModulusPair(potentiallyEncryptedIncomingMessage.GetParameters().at(1), potentiallyEncryptedIncomingMessage.GetParameters().at(2)));
+				this->messageQueue.push(potentiallyEncryptedIncomingMessage);
 			}
-			this->messageQueue.push(incomingMessage);
+			else
+			{
+				//decrypt with client key first
+				Message incomingMessage = encryption->EncryptOrDecipherMessage(Message(messageStrings.at(i)), clientMap.AccessValue(playerID)->GetPublicKey().GetKey(), clientMap.AccessValue(playerID)->GetPublicKey().GetModulus());
+				//decrypt with server private key
+				incomingMessage = encryption->EncryptOrDecipherMessageWithPrivateKey(incomingMessage);
+				if (incomingMessage.GetMessagePurpose() == MessagePurpose::Quit)
+				{
+					clientMap.AccessValue(playerID)->setPlayerInactive();
+				}
+				this->messageQueue.push(encryption->EncryptOrDecipherMessageWithPrivateKey(incomingMessage));
+			}
 		}
 	}
 }
@@ -81,12 +101,11 @@ void Networking::GameLoop()
 		Message messageFromQueue;
 		while (messageQueue.tryPop(messageFromQueue))
 		{
+			//when a key gets here it should be decrypted;
 			switch (messageFromQueue.GetMessagePurpose())
 			{
 			case MessagePurpose::Join:
 			{
-				if (messageFromQueue.GetOpponentID() == ErrorInt)
-					SendMessageToClientPlayerByID(messageFromQueue.GetID(), messageFromQueue);
 				playerIDsWaitingForMatch.push_back(messageFromQueue.GetID());
 				break;
 			}
@@ -143,9 +162,17 @@ void Networking::GameLoop()
 				std::cerr << "error in pulling message from queue";
 				break;
 			}
+			case  MessagePurpose::PublicKeyMessage:
+			{
+				std::vector<int> params;
+				Message acknowledgementJoinMessage = Message(messageFromQueue.GetID(), MessagePurpose::Join, params);
+				SendMessageToClientPlayerByID(messageFromQueue.GetID(), acknowledgementJoinMessage);
+				break;
+			}
 			default:
 				break;
 			}
+			
 
 			//EchoMessage(messageFromQueue);
 		}
@@ -174,6 +201,11 @@ void Networking::EchoMessage(Message messageToEcho)
 
 void Networking::SendMessageToClientPlayerByID(int playerID, Message messageToSend)
 {
+	if (messageToSend.GetMessagePurpose() != MessagePurpose::PublicKeyMessage)
+	{
+		messageToSend = encryption->EncryptOrDecipherMessageWithPrivateKey(messageToSend);
+		messageToSend = encryption->EncryptOrDecipherMessage(messageToSend, clientMap.AccessValue(playerID)->GetPublicKey().GetKey(), clientMap.AccessValue(playerID)->GetPublicKey().GetModulus());
+	}
 	send(*(clientMap.AccessValue(playerID)->GetSocket()), messageToSend.ToString().c_str(), messageToSend.ToString().length(), 0);
 	std::cout << "Sending: " << messageToSend.ToString() << " to player with ID: " << playerID << "\n";
 }

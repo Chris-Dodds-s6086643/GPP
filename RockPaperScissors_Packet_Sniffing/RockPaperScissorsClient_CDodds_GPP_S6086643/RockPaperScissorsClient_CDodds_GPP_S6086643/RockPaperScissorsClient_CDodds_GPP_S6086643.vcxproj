@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -147,11 +147,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Encryption.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Networking.cpp" />
     <ClCompile Include="RockPaperScissorsClient_CDodds_GPP_S6086643.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Encryption.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="Networking.h" />

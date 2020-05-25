@@ -4,6 +4,7 @@
 #include <thread>
 #include <atomic>
 #include "Message.h"
+#include "KeyModulusPair.h"
 
 class ClientPlayer
 {
@@ -14,6 +15,7 @@ private:
 	SOCKET* playerSocket;
 	std::thread* playerReceiveThread;
 	std::atomic<bool> isPlayerActive;
+	KeyModulusPair* publicKey;
 public:
 	/**	
 	Creates a blank ClientPlayer;
@@ -30,7 +32,8 @@ public:
 		name("Buttons"),
 		playerSocket(inPlayerSocket),
 		playerReceiveThread(inPlayerRecieveThread),
-		isPlayerActive(true)
+		isPlayerActive(true),
+		publicKey(nullptr)
 	{};
 
 	bool IsPlayerActive() 
@@ -45,25 +48,17 @@ public:
 		isPlayerActive.store(false);
 	}
 
-	int GetPlayerID()
-	{
-		return playerID;
-	}
+	int GetPlayerID() { return playerID; }
 
-	SOCKET* GetSocket()
-	{
-		return playerSocket;
-	}
+	SOCKET* GetSocket() { return playerSocket; }
 
-	void SetInput(MessageInputs inMessageInput)
-	{
-		input = inMessageInput;
-	}
+	void SetInput(MessageInputs inMessageInput) { input = inMessageInput; }
 	
-	MessageInputs GetInput()
-	{
-		return input;
-	}
+	MessageInputs GetInput() { return input; }
+
+	void  SetPublicKey(KeyModulusPair* inPublicKey) { publicKey = inPublicKey; }
+
+	KeyModulusPair GetPublicKey() { return *publicKey; }
 
 	~ClientPlayer()
 	{

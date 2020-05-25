@@ -6,7 +6,7 @@
 class Encryption
 {
 private:
-    std::array<int, 6> primeNumbers;
+    std::array<int, 3> primeNumbers;
     int primeNumberOne;
     int primeNumberTwo;
     long long int privateKey;

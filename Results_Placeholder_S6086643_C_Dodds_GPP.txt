@@ -1,0 +1,10 @@
+This document is simply here to outline that, despite there being a results document mentioned in the deliverables, there are no results to document in this sense.
+
+In the proposal there is a deliverable which is: "A document compiling and explaining the results of the tests". These results were intended to be questionnaires answered by people who had played the game with other participants. Regarding if they felt another player had gained an unfair advantage. The point being that, provided the game is not of e-sports competition level, if a user could not tell the difference between a bot and just another player who is good the game is as secure against players seeking to gain an advantage as it needs to be. 
+
+However, these tests did not occur thus leaving the results of said tests non-existent.
+
+Apologies,
+
+Chris Dodds
+S6086643

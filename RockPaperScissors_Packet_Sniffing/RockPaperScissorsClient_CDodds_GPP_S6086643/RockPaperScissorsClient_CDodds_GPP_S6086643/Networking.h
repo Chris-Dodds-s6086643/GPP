@@ -1,5 +1,6 @@
 #pragma once
 #include "ThreadSafeQueue.h"
+#include "Encryption.h"
 #include "Message.h"
 #include <WS2tcpip.h>
 #include <iostream>
@@ -15,6 +16,7 @@ private:
 	ThreadSafeQueue<Message>& incomingMessageQueue;
 	std::thread* listeningThread;
 	std::atomic<bool> listening;
+	Encryption* encryption;
 #pragma endregion
 
 #pragma region Server Connection Variables
@@ -24,6 +26,8 @@ private:
 	WSADATA windowsSocketData;
 	WORD windowsSocketVersion;
 	SOCKET* serverSocket;
+	long long int serverPublicKey;
+	long long int serverPublicModulus;
 #pragma endregion
 public:
 	Networking(ThreadSafeQueue<Message>& inIncomingMessageQueue) :
@@ -35,7 +39,8 @@ public:
 		hint(),
 		windowsSocketData(),
 		windowsSocketVersion(MAKEWORD(2,2)),
-		serverSocket(nullptr)
+		serverSocket(nullptr),
+		encryption(new Encryption())
 	{
 	#pragma region Establish Connection To Server & initialise Relevant Variables
 		int windowsSocketStartupResult = WSAStartup(windowsSocketVersion, &windowsSocketData);

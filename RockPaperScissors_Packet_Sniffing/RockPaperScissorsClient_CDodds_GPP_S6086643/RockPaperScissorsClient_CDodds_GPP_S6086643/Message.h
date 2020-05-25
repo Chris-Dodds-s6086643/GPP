@@ -3,15 +3,26 @@
 #include <vector>
 #include "Utility.h"
 
+#pragma region Enums For Message Sending(2 based start for the RSA encryption);
 enum class MessagePurpose
 {
-	Join = 0,
-	Quit = 1,
-	Input = 2,
-	GameEnd = 3,
-	Error = 4
+	PublicKeyMessage = 1,
+	Join = 2,
+	Quit = 3,
+	Input = 4,
+	GameEnd = 5,
+	Error = 6
 };
+enum MessageInputs
+{
+	Rock = 2,
+	Paper = 3,
+	Scissors = 4,
+	InputError = 5
+};
+#pragma endregion
 
+#pragma region Enums for message reading (0 based start)
 enum MessageSegments
 {
 	SenderID = 0,
@@ -19,14 +30,7 @@ enum MessageSegments
 	OpponentID = 2,
 	FirstVariable = 3
 };
-
-enum MessageInputs
-{
-	Rock = 0,
-	Paper = 1,
-	Scissors = 2,
-	InputError
-};
+#pragma endregion
 
 class Message
 {
@@ -50,7 +54,7 @@ public:
 		senderID = std::stoi(splitString[MessageSegments::SenderID]);
 		messagePurpose = MessagePurpose(std::stoi(splitString[MessageSegments::Purpose]));
 		opponentID = std::stoi(splitString[MessageSegments::OpponentID]);
-		for (int i = int(MessageSegments::FirstVariable); i < int(splitString.size()); i++)
+		for (int i = int(MessageSegments::FirstVariable); i < int(splitString.size()); i++) 
 		{
 			try
 			{
@@ -67,6 +71,13 @@ public:
 		senderID(inSenderID),
 		messagePurpose(inMessagePurpose),
 		opponentID(ErrorInt),
+		parameters(inParamaters)
+	{}
+
+	Message(int inSenderID, MessagePurpose inMessagePurpose, int inOpponentID, std::vector<int> inParamaters) :
+		senderID(inSenderID),
+		messagePurpose(inMessagePurpose),
+		opponentID(inOpponentID),
 		parameters(inParamaters)
 	{}
 
